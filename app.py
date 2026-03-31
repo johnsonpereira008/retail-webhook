@@ -30,7 +30,7 @@ def webhook():
 
         # If API works
         if brand:
-            response_text = f"Here are some {brand} products: iPhone 13, iPhone 14"
+            response_text = f"Here are some {brand} products: This is a new CODE"
         elif category:
             response_text = f"Here are some {category}: phones, laptops, shoes"
         else:
