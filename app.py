@@ -19,7 +19,7 @@ def webhook():
     if tag == "product_search":
 
         # Simulate failure randomly
-        if random.choice([True, False]):
+        if True:
             return jsonify({
                 "fulfillment_response": {
                     "messages": [
