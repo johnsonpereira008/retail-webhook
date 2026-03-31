@@ -19,7 +19,7 @@ def webhook():
     if tag == "product_search":
 
         # Simulate failure randomly
-        if True:
+        if random.choice([True, False]):
             return jsonify({
                 "fulfillment_response": {
                     "messages": [
@@ -30,7 +30,7 @@ def webhook():
 
         # If API works
         if brand:
-            response_text = f"Here are some {brand} products: This is a new CODE"
+            response_text = f"Here are some {brand} products: iPhone 13, iPhone 14"
         elif category:
             response_text = f"Here are some {category}: phones, laptops, shoes"
         else:
