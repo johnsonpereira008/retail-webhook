@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import random   # 👈 THIS LINE goes at the TOP
+import random
 
 app = Flask(__name__)
 
@@ -7,36 +7,46 @@ app = Flask(__name__)
 def webhook():
     req = request.get_json()
 
-    # Get tag from Dialogflow
+    # Get tag
     tag = req['fulfillmentInfo']['tag']
 
-    # Get parameters (brand, category)
+    # Get parameters
     session_params = req.get('sessionInfo', {}).get('parameters', {})
     brand = session_params.get('brand')
     category = session_params.get('product_category')
 
-    # 🔥 PRODUCT SEARCH LOGIC WITH FAILURE SIMULATION
+    # 🛍️ PRODUCT SEARCH
     if tag == "product_search":
 
-        # Simulate failure randomly
+        # 🔥 Simulate failure
         if random.choice([True, False]):
             return jsonify({
+                "sessionInfo": {
+                    "parameters": {
+                        "api_failed": True   # 👈 VERY IMPORTANT
+                    }
+                },
                 "fulfillment_response": {
                     "messages": [
-                        {"text": {"text": ["Sorry, we are unable to fetch products right now. Please try again."]}}
+                        {"text": {"text": ["Temporary issue, retrying..."]}}
                     ]
                 }
             })
 
-        # If API works
+        # ✅ Success case
         if brand:
-            response_text = f"Here are some {brand} products: iPhone 13, iPhone 14"
+            response_text = f"Here are some {brand} products"
         elif category:
-            response_text = f"Here are some {category}: phones, laptops, shoes"
+            response_text = f"Here are some {category}"
         else:
             response_text = "Here are some popular products"
 
         return jsonify({
+            "sessionInfo": {
+                "parameters": {
+                    "api_failed": False   # 👈 RESET FLAG
+                }
+            },
             "fulfillment_response": {
                 "messages": [
                     {"text": {"text": [response_text]}}
@@ -48,6 +58,11 @@ def webhook():
     elif tag == "order_tracking":
         status = random.choice(["Shipped", "Out for delivery", "Delivered"])
         return jsonify({
+            "sessionInfo": {
+                "parameters": {
+                    "api_failed": False
+                }
+            },
             "fulfillment_response": {
                 "messages": [
                     {"text": {"text": [f"Your order status is: {status}"]}}
