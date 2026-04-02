@@ -69,5 +69,20 @@ def webhook():
                 ]
             }
         })
+    elif tag == "add_to_cart":
+    product = session_params.get("selected_product", "item")
+
+    return jsonify({
+        "sessionInfo": {
+            "parameters": {
+                "cart_items": [product]
+            }
+        },
+        "fulfillment_response": {
+            "messages": [
+                {"text": {"text": [f"{product} added to cart"]}}
+            ]
+        }
+    })
 
     return jsonify({})
