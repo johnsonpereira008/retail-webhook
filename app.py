@@ -7,23 +7,22 @@ app = Flask(__name__)
 def webhook():
     req = request.get_json()
 
-    # Get tag
-    tag = req['fulfillmentInfo']['tag']
-
-    # Get parameters
+    tag = req.get('fulfillmentInfo', {}).get('tag')
     session_params = req.get('sessionInfo', {}).get('parameters', {})
+
     brand = session_params.get('brand')
     category = session_params.get('product_category')
+    selected_product = session_params.get('selected_product')
+    cart_items = session_params.get('cart_items', [])
 
     # 🛍️ PRODUCT SEARCH
     if tag == "product_search":
 
-        # 🔥 Simulate failure
         if random.choice([True, False]):
             return jsonify({
                 "sessionInfo": {
                     "parameters": {
-                        "api_failed": True   # 👈 VERY IMPORTANT
+                        "api_failed": True
                     }
                 },
                 "fulfillment_response": {
@@ -33,18 +32,12 @@ def webhook():
                 }
             })
 
-        # ✅ Success case
-        if brand:
-            response_text = f"Here are some {brand} products"
-        elif category:
-            response_text = f"Here are some {category}"
-        else:
-            response_text = "Here are some popular products"
+        response_text = f"Here are some products"
 
         return jsonify({
             "sessionInfo": {
                 "parameters": {
-                    "api_failed": False   # 👈 RESET FLAG
+                    "api_failed": False
                 }
             },
             "fulfillment_response": {
@@ -54,35 +47,23 @@ def webhook():
             }
         })
 
-    # 🚚 ORDER TRACKING
-    elif tag == "order_tracking":
-        status = random.choice(["Shipped", "Out for delivery", "Delivered"])
+    # 🛒 ADD TO CART
+    elif tag == "add_to_cart":
+
+        if selected_product:
+            cart_items.append(selected_product)
+
         return jsonify({
             "sessionInfo": {
                 "parameters": {
-                    "api_failed": False
+                    "cart_items": cart_items
                 }
             },
             "fulfillment_response": {
                 "messages": [
-                    {"text": {"text": [f"Your order status is: {status}"]}}
+                    {"text": {"text": [f"{selected_product} added to cart"]}}
                 ]
             }
         })
-    elif tag == "add_to_cart":
-    product = session_params.get("selected_product", "item")
-
-    return jsonify({
-        "sessionInfo": {
-            "parameters": {
-                "cart_items": [product]
-            }
-        },
-        "fulfillment_response": {
-            "messages": [
-                {"text": {"text": [f"{product} added to cart"]}}
-            ]
-        }
-    })
 
     return jsonify({})
