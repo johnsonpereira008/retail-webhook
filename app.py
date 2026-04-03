@@ -14,6 +14,7 @@ def webhook():
     remove_product = session_params.get('remove_product')
     cart_items = session_params.get('cart_items', [])
     intent = req.get('intentInfo', {}).get('displayName')
+    cart_action = session_params.get('cart_action')
 
     # -------------------------------
     # PRODUCT SEARCH
@@ -54,20 +55,20 @@ def webhook():
 
         message = ""
 
+        # -------------------------------
         # ADD
-
-        cart_action = session_params.get('cart_action')
-
+        # -------------------------------
         if intent == "select.product" or intent == "cart.add" or cart_action == "add":
             if selected_product:
                 cart_items.append(selected_product)
 
-        # Build cart view
                 items = "\n".join([f"{i+1}. {item}" for i, item in enumerate(cart_items)])
 
                 message = f"{selected_product} added to cart\n\nYour cart contains:\n{items}"
-        
+
+        # -------------------------------
         # REMOVE
+        # -------------------------------
         elif intent == "cart.remove":
             if remove_product in cart_items:
                 cart_items.remove(remove_product)
@@ -75,12 +76,16 @@ def webhook():
             else:
                 message = "Item not found in cart"
 
+        # -------------------------------
         # CLEAR
+        # -------------------------------
         elif intent == "cart.clear":
             cart_items = []
             message = "Your cart is now empty"
 
+        # -------------------------------
         # VIEW
+        # -------------------------------
         elif intent == "cart.view":
             if not cart_items:
                 message = "Your cart is empty"
@@ -88,7 +93,9 @@ def webhook():
                 items = "\n".join([f"{i+1}. {item}" for i, item in enumerate(cart_items)])
                 message = f"Your cart contains:\n{items}"
 
+        # -------------------------------
         # DEFAULT FALLBACK
+        # -------------------------------
         if not message:
             if cart_items:
                 items = "\n".join([f"{i+1}. {item}" for i, item in enumerate(cart_items)])
@@ -99,8 +106,8 @@ def webhook():
         return jsonify({
             "sessionInfo": {
                 "parameters": {
-                    "cart_items": cart_items
-                    "cart_action": None
+                    "cart_items": cart_items,
+                    "cart_action": None   # ✅ FIXED COMMA
                 }
             },
             "fulfillment_response": {
