@@ -10,12 +10,14 @@ def webhook():
     tag = req.get('fulfillmentInfo', {}).get('tag')
     session_params = req.get('sessionInfo', {}).get('parameters', {})
 
-    brand = session_params.get('brand')
-    category = session_params.get('product_category')
     selected_product = session_params.get('selected_product')
+    remove_product = session_params.get('remove_product')
     cart_items = session_params.get('cart_items', [])
+    intent = req.get('intentInfo', {}).get('displayName')
 
-    # 🛍️ PRODUCT SEARCH
+    # -------------------------------
+    # PRODUCT SEARCH
+    # -------------------------------
     if tag == "product_search":
 
         if random.choice([True, False]):
@@ -32,8 +34,6 @@ def webhook():
                 }
             })
 
-        response_text = f"Here are some products"
-
         return jsonify({
             "sessionInfo": {
                 "parameters": {
@@ -42,16 +42,52 @@ def webhook():
             },
             "fulfillment_response": {
                 "messages": [
-                    {"text": {"text": [response_text]}}
+                    {"text": {"text": ["Here are some products"]}}
                 ]
             }
         })
 
-    # 🛒 ADD TO CART
-    elif tag == "add_to_cart":
+    # -------------------------------
+    # CART HANDLER (ALL ACTIONS)
+    # -------------------------------
+    elif tag == "cart_handler":
 
-        if selected_product:
-            cart_items.append(selected_product)
+        message = ""
+
+        # ADD
+        if intent == "select.product" or intent == "cart.add":
+            if selected_product:
+                cart_items.append(selected_product)
+                message = f"{selected_product} added to cart"
+
+        # REMOVE
+        elif intent == "cart.remove":
+            if remove_product in cart_items:
+                cart_items.remove(remove_product)
+                message = f"{remove_product} removed from cart"
+            else:
+                message = "Item not found in cart"
+
+        # CLEAR
+        elif intent == "cart.clear":
+            cart_items = []
+            message = "Your cart is now empty"
+
+        # VIEW
+        elif intent == "cart.view":
+            if not cart_items:
+                message = "Your cart is empty"
+            else:
+                items = "\n".join([f"{i+1}. {item}" for i, item in enumerate(cart_items)])
+                message = f"Your cart contains:\n{items}"
+
+        # DEFAULT FALLBACK
+        if not message:
+            if cart_items:
+                items = "\n".join([f"{i+1}. {item}" for i, item in enumerate(cart_items)])
+                message = f"Your cart contains:\n{items}"
+            else:
+                message = "Your cart is empty"
 
         return jsonify({
             "sessionInfo": {
@@ -61,7 +97,7 @@ def webhook():
             },
             "fulfillment_response": {
                 "messages": [
-                    {"text": {"text": [f"{selected_product} added to cart"]}}
+                    {"text": {"text": [message]}}
                 ]
             }
         })
