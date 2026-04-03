@@ -55,7 +55,10 @@ def webhook():
         message = ""
 
         # ADD
-        if intent == "select.product" or intent == "cart.add":
+        
+        cart_action = session_params.get('cart_action')
+
+        if intent == "select.product" or intent == "cart.add" or cart_action == "add":
             if selected_product:
                 cart_items.append(selected_product)
                 message = f"{selected_product} added to cart"
