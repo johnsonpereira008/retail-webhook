@@ -55,14 +55,18 @@ def webhook():
         message = ""
 
         # ADD
-        
+
         cart_action = session_params.get('cart_action')
 
         if intent == "select.product" or intent == "cart.add" or cart_action == "add":
             if selected_product:
                 cart_items.append(selected_product)
-                message = f"{selected_product} added to cart"
 
+        # Build cart view
+                items = "\n".join([f"{i+1}. {item}" for i, item in enumerate(cart_items)])
+
+                message = f"{selected_product} added to cart\n\nYour cart contains:\n{items}"
+        
         # REMOVE
         elif intent == "cart.remove":
             if remove_product in cart_items:
@@ -96,6 +100,7 @@ def webhook():
             "sessionInfo": {
                 "parameters": {
                     "cart_items": cart_items
+                    "cart_action": None
                 }
             },
             "fulfillment_response": {
