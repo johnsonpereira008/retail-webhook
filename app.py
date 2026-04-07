@@ -38,7 +38,20 @@ def webhook():
                     cart_items[selected_product] = 1
 
                 message = f"{selected_product} added to cart"
-
+#------------CART REMOVE-------------
+        
+        elif intent == "cart.remove":
+            if remove_product in cart_items:
+                del cart_items[remove_product]
+                message = f"{remove_product} removed from cart"
+            else:
+                message = "Item not found in cart"
+#-------------- CLEAR CART-------
+        
+        elif intent == "cart.clear":
+            cart_items = {}
+            message = "Your cart is now empty"
+        
         # -------------------------------
         # VIEW CART
         # -------------------------------
