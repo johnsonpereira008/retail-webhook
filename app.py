@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-import random
 
 app = Flask(__name__)
 
@@ -12,109 +11,63 @@ def webhook():
 
     selected_product = session_params.get('selected_product')
     remove_product = session_params.get('remove_product')
-    cart_items = session_params.get('cart_items', [])
+    cart_items = session_params.get('cart_items', {})
     intent = req.get('intentInfo', {}).get('displayName')
-    cart_action = session_params.get('cart_action')
+
+    message = ""
 
     # -------------------------------
-    # PRODUCT SEARCH
+    # PRODUCT SEARCH (STATIC)
     # -------------------------------
     if tag == "product_search":
-
-        if random.choice([True, False]):
-            return jsonify({
-                "sessionInfo": {
-                    "parameters": {
-                        "api_failed": True
-                    }
-                },
-                "fulfillment_response": {
-                    "messages": [
-                        {"text": {"text": ["Temporary issue, retrying..."]}}
-                    ]
-                }
-            })
-
-        return jsonify({
-            "sessionInfo": {
-                "parameters": {
-                    "api_failed": False
-                }
-            },
-            "fulfillment_response": {
-                "messages": [
-                    {"text": {"text": ["Here are some products"]}}
-                ]
-            }
-        })
+        message = "Here are some products:\n- iPhone 13\n- iPhone 14\n- Samsung"
 
     # -------------------------------
-    # CART HANDLER (ALL ACTIONS)
+    # CART HANDLER (MAIN LOGIC)
     # -------------------------------
     elif tag == "cart_handler":
 
-        message = ""
-
         # -------------------------------
-        # ADD
+        # ADD TO CART
         # -------------------------------
-        if intent == "select.product" or intent == "cart.add" or cart_action == "add":
+        if intent == "cart.add":
             if selected_product:
-                cart_items.append(selected_product)
+                if selected_product in cart_items:
+                    cart_items[selected_product] += 1
+                else:
+                    cart_items[selected_product] = 1
 
-                items = "\n".join([f"{i+1}. {item}" for i, item in enumerate(cart_items)])
-
-                message = f"{selected_product} added to cart\n\nYour cart contains:\n{items}"
-
-        # -------------------------------
-        # REMOVE
-        # -------------------------------
-        elif intent == "cart.remove":
-            if remove_product in cart_items:
-                cart_items.remove(remove_product)
-                message = f"{remove_product} removed from cart"
-            else:
-                message = "Item not found in cart"
+                message = f"{selected_product} added to cart"
 
         # -------------------------------
-        # CLEAR
-        # -------------------------------
-        elif intent == "cart.clear":
-            cart_items = []
-            message = "Your cart is now empty"
-
-        # -------------------------------
-        # VIEW
+        # VIEW CART
         # -------------------------------
         elif intent == "cart.view":
-            if not cart_items:
-                message = "Your cart is empty"
-            else:
-                items = "\n".join([f"{i+1}. {item}" for i, item in enumerate(cart_items)])
-                message = f"Your cart contains:\n{items}"
+            pass  # handled below
 
         # -------------------------------
-        # DEFAULT FALLBACK
+        # DEFAULT: SHOW CART
         # -------------------------------
-        if not message:
-            if cart_items:
-                items = "\n".join([f"{i+1}. {item}" for i, item in enumerate(cart_items)])
-                message = f"Your cart contains:\n{items}"
-            else:
+        if cart_items:
+            items = "\n".join([f"{k} (x{v})" for k, v in cart_items.items()])
+            message += f"\n\nYour cart contains:\n{items}"
+        else:
+            if not message:
                 message = "Your cart is empty"
 
-        return jsonify({
-            "sessionInfo": {
-                "parameters": {
-                    "cart_items": cart_items,
-                    "cart_action": None   # ✅ FIXED COMMA
-                }
-            },
-            "fulfillment_response": {
-                "messages": [
-                    {"text": {"text": [message]}}
-                ]
+    return jsonify({
+        "sessionInfo": {
+            "parameters": {
+                "cart_items": cart_items
             }
-        })
+        },
+        "fulfillment_response": {
+            "messages": [
+                {"text": {"text": [message]}}
+            ]
+        }
+    })
 
-    return jsonify({})
+
+if __name__ == '__main__':
+    app.run(port=8080)
